@@ -1,0 +1,2 @@
+— Multiplication takes precedence over addition.
+hallucinate(1 + 2 * 3)✨
