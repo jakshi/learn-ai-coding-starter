@@ -29,6 +29,10 @@ def test_arithmetic(expression: str, expected: str):
     assert run(f"hallucinate({expression})✨") == f"{expected}\n"
 
 
+def test_tab_escape_is_printed_as_a_tab():
+    assert run(r"hallucinate(“a\tb”)✨") == "a\tb\n"
+
+
 @pytest.mark.parametrize(
     ("dividend", "divisor", "expected"),
     [
