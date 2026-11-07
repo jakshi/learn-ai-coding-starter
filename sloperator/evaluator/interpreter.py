@@ -174,7 +174,8 @@ class Interpreter:
             case TokenType.STAR:
                 return left * right
             case TokenType.SLASH:
-                return left // right
+                quotient = abs(left) // abs(right)
+                return -quotient if (left < 0) != (right < 0) else quotient
             case TokenType.LESS:
                 return left < right
             case TokenType.LESS_EQUAL:

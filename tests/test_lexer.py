@@ -65,6 +65,7 @@ def test_string_may_contain_em_dash_and_opening_quote():
         ("“a\\", 1, "unterminated string"),
         ("a & b", 1, "unexpected character '&', did you mean '&&'?"),
         ("a | b", 1, "unexpected character '|', did you mean '||'?"),
+        ("@", 1, "unexpected character '@'"),
     ],
 )
 def test_lexical_errors(source: str, line: int, message: str):

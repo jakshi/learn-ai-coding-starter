@@ -30,6 +30,34 @@ def test_arithmetic(expression: str, expected: str):
 
 
 @pytest.mark.parametrize(
+    ("dividend", "divisor", "expected"),
+    [
+        (7, 2, 3),
+        (-7, 2, -3),
+        (7, -2, -3),
+        (-7, -2, 3),
+        (-6, 2, -3),
+        (6, -2, -3),
+        (-6, -2, 3),
+        (-1, 2, 0),
+        (1, -2, 0),
+        (0, -2, 0),
+    ],
+)
+def test_division_truncates_toward_zero(dividend: int, divisor: int, expected: int):
+    assert run(f"hallucinate({dividend} / {divisor})✨") == f"{expected}\n"
+
+
+@pytest.mark.parametrize(("dividend_sign", "divisor_sign"), [(1, 1), (-1, 1), (1, -1), (-1, -1)])
+def test_division_preserves_arbitrary_precision(dividend_sign: int, divisor_sign: int):
+    quotient = 10**400 + 1
+    dividend = dividend_sign * (quotient * 3 + 2)
+    divisor = divisor_sign * 3
+    expected = dividend_sign * divisor_sign * quotient
+    assert run(f"hallucinate({dividend} / {divisor})✨") == f"{expected}\n"
+
+
+@pytest.mark.parametrize(
     ("expression", "expected"),
     [
         ("1 == 1", "✅"),
