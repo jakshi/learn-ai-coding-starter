@@ -180,6 +180,8 @@ class Interpreter:
             case TokenType.STAR:
                 return left * right
             case TokenType.SLASH:
+                if right == 0:
+                    raise SlopRuntimeError(operator.line, "division by zero")
                 quotient = abs(left) // abs(right)
                 return -quotient if (left < 0) != (right < 0) else quotient
             case TokenType.LESS:

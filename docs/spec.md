@@ -6,6 +6,16 @@ Files use the `.slop` extension and run with:
 uv run sloperator.py path/to/program.slop
 ```
 
+Use `--check` to run the lexer and parser without executing the program:
+
+```bash
+uv run sloperator.py --check path/to/program.slop
+```
+
+The flag can appear before or after the file path. Valid syntax produces no output and exits with status `0`. Lexical or syntax errors use the normal diagnostics on stderr and exit with status `1`. Invalid command-line arguments or unreadable files exit with status `2`.
+
+Check mode never evaluates expressions, calls functions, or runs loops. Undefined names, type errors, and assignments to `loadbearing` variables are runtime errors, so they do not fail a syntax check.
+
 ## Example
 
 ```slop
