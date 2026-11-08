@@ -18,7 +18,7 @@ clanker describe(count) {
     }
 }
 
-slop MAX = 3✨
+loadbearing MAX = 3✨
 slop count = 0✨
 
 ralph count < MAX {
@@ -34,6 +34,7 @@ Prints `small slop` twice, then `big slop`.
 | SlopLang      | Conventional | Meaning                                                 |
 | ------------- | ------------ | ------------------------------------------------------- |
 | `slop`        | `let`        | Declare a mutable variable                              |
+| `loadbearing` | `const`      | Declare an immutable variable                           |
 | `clanker`     | `fn`         | Define a function                                       |
 | `vibe`        | `if`         | Conditional                                             |
 | `nah`         | `else`       | Else branch                                             |
@@ -70,18 +71,34 @@ No implicit conversions.
 
 ## Variables
 
-`slop` declares a mutable variable and requires an initializer. A scope cannot declare a name twice, but an inner block may shadow an outer name.
+`slop` declares a mutable variable; `loadbearing` declares an immutable variable. Both require an initializer and a terminating `✨`, accept any value type, and can appear at the top level, inside blocks, or inside function bodies. `loadbearing` is a reserved keyword.
+
+A scope cannot declare a name twice, even when the declarations use different keywords. An inner `slop` or `loadbearing` declaration may shadow an outer name, creating an independent binding.
 
 ```slop
+loadbearing LIMIT = 100✨
 slop score = 10✨
-slop LIMIT = 100✨
-score = score + 5✨
 score = score + 1✨
+LIMIT = 200✨   — Runtime error: cannot assign to loadbearing 'LIMIT'
 ```
 
-Assignment is a statement, not an expression: `name = expression✨`. It updates the nearest existing `slop` variable. Reading or assigning an undefined name is a runtime error.
+Assignment is a statement, not an expression: `name = expression✨`. It evaluates the right-hand side first, then resolves the nearest existing binding. A mutable binding can be updated; assigning to a `loadbearing` binding is a runtime error (`cannot assign to loadbearing '<name>'`), even when the new value equals the old value. An immutable inner binding blocks assignment rather than allowing a write to an outer mutable binding. Reading or assigning an undefined name is a runtime error.
+
+Right-hand-side side effects occur before an immutable-assignment error. If evaluating the right-hand side fails, that error takes precedence.
 
 Every brace block is a lexical scope. Assignment searches the current scope, then each enclosing scope.
+
+```slop
+loadbearing LIMIT = 100✨
+{
+    slop LIMIT = 10✨
+    LIMIT = 20✨
+    hallucinate(LIMIT)✨   — 20
+}
+hallucinate(LIMIT)✨       — 100
+```
+
+**Known interpreter limitation:** standalone `{ ... }` blocks currently use the global scope as their parent, so they can skip enclosing local bindings. This pre-existing scoping bug is separate from `loadbearing` support.
 
 ## Control Flow
 
@@ -152,7 +169,7 @@ functionDecl   -> "clanker" IDENTIFIER "(" parameters? ")" block ;
 parameters     -> IDENTIFIER ( "," IDENTIFIER )* ;
 
 declaration    -> variableDecl | statement ;
-variableDecl   -> "slop" IDENTIFIER "=" expression "✨" ;
+variableDecl   -> ( "slop" | "loadbearing" ) IDENTIFIER "=" expression "✨" ;
 
 statement      -> assignStmt | ifStmt | loopStmt | returnStmt
                 | block | expressionStmt ;
@@ -185,6 +202,7 @@ The interpreter stops at the first lexical, syntax, or runtime error, writes the
 SlopLang lexical error at line 1: straight quotes are not supported, use “ and ” for strings
 SlopLang syntax error at line 2: expected ✨ after variable declaration, found 'slop'
 SlopLang runtime error at line 3: division by zero
+SlopLang runtime error at line 4: cannot assign to loadbearing 'LIMIT'
 ```
 
 ## Typing SlopLang

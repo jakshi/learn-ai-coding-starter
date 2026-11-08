@@ -47,6 +47,15 @@ def test_hallucinate_is_an_identifier_not_a_keyword():
     assert tokenize("hallucinate")[0].type is TokenType.IDENTIFIER
 
 
+def test_loadbearing_is_a_keyword():
+    assert tokenize("loadbearing")[0].type is TokenType.LOADBEARING
+
+
+@pytest.mark.parametrize("name", ["loadbearing_limit", "loadbearingExtra", "Loadbearing"])
+def test_loadbearing_keyword_requires_an_exact_match(name: str):
+    assert tokenize(name)[0].type is TokenType.IDENTIFIER
+
+
 def test_string_may_contain_em_dash_and_opening_quote():
     assert tokenize("“x — “y”")[0].literal == "x — “y"
 
