@@ -19,6 +19,9 @@ def fails(source: str) -> str:
     ("expression", "expected"),
     [
         ("7 / 2", "3"),
+        ("8 / 3 * 2", "4"),
+        ("8 * 3 / 5", "4"),
+        ("20 / 3 / 2", "3"),
         ("2 - 3 * 4", "-10"),
         ("(2 - 3) * 4", "-4"),
         ("--5", "5"),
@@ -57,6 +60,16 @@ def test_division_preserves_arbitrary_precision(dividend_sign: int, divisor_sign
     quotient = 10**400 + 1
     dividend = dividend_sign * (quotient * 3 + 2)
     divisor = divisor_sign * 3
+    expected = dividend_sign * divisor_sign * quotient
+    assert run(f"hallucinate({dividend} / {divisor})✨") == f"{expected}\n"
+
+
+@pytest.mark.parametrize("quotient", [0, 7])
+@pytest.mark.parametrize(("dividend_sign", "divisor_sign"), [(1, 1), (-1, 1), (1, -1), (-1, -1)])
+def test_division_with_a_large_divisor(quotient: int, dividend_sign: int, divisor_sign: int):
+    magnitude = 10**400 + 1
+    dividend = dividend_sign * ((quotient + 1) * magnitude - 1)
+    divisor = divisor_sign * magnitude
     expected = dividend_sign * divisor_sign * quotient
     assert run(f"hallucinate({dividend} / {divisor})✨") == f"{expected}\n"
 
@@ -158,6 +171,18 @@ hallucinate(find())✨"""
         ("hallucinate(-“a”)✨", "operand of unary '-' must be a number, got string"),
         ("hallucinate(“a” < “b”)✨", "operands of '<' must be numbers, got string and string"),
         ("hallucinate(1 - ✅)✨", "operands of '-' must be numbers, got number and boolean"),
+        ("hallucinate(1 / ❌)✨", "operands of '/' must be numbers, got number and boolean"),
+        ("hallucinate(✅ / 2)✨", "operands of '/' must be numbers, got boolean and number"),
+        ("hallucinate(1 / “0”)✨", "operands of '/' must be numbers, got number and string"),
+        ("hallucinate(“1” / 0)✨", "operands of '/' must be numbers, got string and number"),
+        (
+            "clanker nothing() { } hallucinate(1 / nothing())✨",
+            "operands of '/' must be numbers, got number and nil",
+        ),
+        (
+            "clanker nothing() { } hallucinate(nothing() / 0)✨",
+            "operands of '/' must be numbers, got nil and number",
+        ),
         ("ralph 0 { }", "ralph condition must be a boolean, got number"),
         ("hallucinate(1)(2)✨", "can only call clankers, got nil"),
     ],

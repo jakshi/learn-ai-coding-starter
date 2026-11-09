@@ -65,6 +65,22 @@ def test_tab_escape_becomes_a_tab_character():
 
 
 @pytest.mark.parametrize(
+    ("source", "lines"),
+    [
+        ("— comment\nvalue", [2, 2]),
+        ("first — comment\nsecond", [1, 2, 2]),
+        ("— first\n— second\n\nvalue", [4, 4]),
+        ("— comment\n", [2]),
+        ("value — comment at EOF", [1, 1]),
+        ("— comment at EOF", [1]),
+    ],
+    ids=["leading", "inline", "multiple", "final-newline", "inline-eof", "comment-only-eof"],
+)
+def test_comments_preserve_token_line_numbers(source: str, lines: list[int]):
+    assert [token.line for token in tokenize(source)] == lines
+
+
+@pytest.mark.parametrize(
     ("source", "line", "message"),
     [
         ('"hi"', 1, "straight quotes are not supported, use “ and ” for strings"),

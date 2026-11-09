@@ -50,8 +50,24 @@ def test_missing_file_and_usage():
             "before\n",
             2,
         ),
+        ("— comment\nhallucinate(1 / 0)✨", "", 2),
+        (
+            "hallucinate(“before”)✨ — inline comment\nhallucinate(1 / 0)✨",
+            "before\n",
+            2,
+        ),
+        ("— first\n— second\n\nhallucinate(1 / 0)✨", "", 4),
     ],
-    ids=["positive", "zero", "negative", "computed-zero", "earlier-output"],
+    ids=[
+        "positive",
+        "zero",
+        "negative",
+        "computed-zero",
+        "earlier-output",
+        "leading-comment",
+        "inline-comment",
+        "multiple-comments",
+    ],
 )
 def test_division_by_zero_reports_a_runtime_error(
     tmp_path: Path, source: str, stdout: str, line: int
