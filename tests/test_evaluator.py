@@ -204,6 +204,55 @@ hallucinate(hallucinate)✨"""
     assert run(source) == "0\n-42\nstr\n✅\n❌\nnil\n<clanker f>\n<clanker hallucinate>\n"
 
 
+@pytest.mark.parametrize(
+    ("arguments", "expected"),
+    [
+        ("", "\n"),
+        ("3", "3\n"),
+        ("“hello”, “world”", "hello world\n"),
+        ("1 + 2, 3 * 4, -5", "3 12 -5\n"),
+        ("“”, “middle”, “”", " middle \n"),
+        ("“ a ”, “ b ”", " a   b \n"),
+    ],
+)
+def test_hallucinate_prints_space_separated_arguments(arguments: str, expected: str):
+    assert run(f"hallucinate({arguments})✨") == expected
+
+
+def test_hallucinate_formats_mixed_value_kinds():
+    source = """clanker f() { }
+hallucinate(0, -42, “str”, ✅, ❌, f(), f, hallucinate)✨"""
+    assert run(source) == "0 -42 str ✅ ❌ nil <clanker f> <clanker hallucinate>\n"
+
+
+def test_hallucinate_accepts_many_arguments():
+    values = [str(number) for number in range(300)]
+    assert run(f"hallucinate({', '.join(values)})✨") == " ".join(values) + "\n"
+
+
+@pytest.mark.parametrize(("arguments", "output"), [("", "\n"), ("42", "42\n"), ("1, 2", "1 2\n")])
+def test_hallucinate_returns_nil(arguments: str, output: str):
+    assert run(f"hallucinate(hallucinate({arguments}))✨") == output + "nil\n"
+
+
+def test_hallucinate_evaluates_arguments_once_left_to_right():
+    source = """slop n = 0✨
+clanker next() {
+    n = n + 1✨
+    ship n✨
+}
+hallucinate(next(), next(), next())✨
+hallucinate(n)✨"""
+    assert run(source) == "1 2 3\n3\n"
+
+
+def test_hallucinate_does_not_print_if_an_argument_fails():
+    result = run_source("hallucinate(“not printed”, missing)✨")
+    assert result.stdout == ""
+    assert result.stderr == "SlopLang runtime error at line 1: undefined variable 'missing'\n"
+    assert result.exit_code == 1
+
+
 def test_variation_selector_after_emoji_is_accepted():
     assert run("hallucinate(✅️)✨️\nhallucinate(❌️)✨️") == "✅\n❌\n"
 

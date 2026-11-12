@@ -64,6 +64,13 @@ def test_tab_escape_becomes_a_tab_character():
     assert tokenize(r"“\t”")[0].literal == "\t"
 
 
+@pytest.mark.parametrize("newline", ["\n", "\r", "\r\n"], ids=["lf", "cr", "crlf"])
+def test_newlines_preserve_token_line_numbers(newline: str):
+    source = f"{newline}first{newline}{newline}second{newline}"
+    assert [token.line for token in tokenize(source)] == [2, 4, 5]
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r", "\r\n"], ids=["lf", "cr", "crlf"])
 @pytest.mark.parametrize(
     ("source", "lines"),
     [
@@ -76,8 +83,16 @@ def test_tab_escape_becomes_a_tab_character():
     ],
     ids=["leading", "inline", "multiple", "final-newline", "inline-eof", "comment-only-eof"],
 )
-def test_comments_preserve_token_line_numbers(source: str, lines: list[int]):
-    assert [token.line for token in tokenize(source)] == lines
+def test_comments_preserve_token_line_numbers(source: str, lines: list[int], newline: str):
+    assert [token.line for token in tokenize(source.replace("\n", newline))] == lines
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r", "\r\n"], ids=["lf", "cr", "crlf"])
+def test_newlines_preserve_lexical_error_line_numbers(newline: str):
+    with pytest.raises(LexicalError) as info:
+        tokenize(f"first{newline}@")
+    assert info.value.line == 2
+    assert info.value.message == "unexpected character '@'"
 
 
 @pytest.mark.parametrize(
@@ -90,6 +105,8 @@ def test_comments_preserve_token_line_numbers(source: str, lines: list[int]):
         ("x”", 1, "unexpected closing quote ” without an opening “"),
         ("“abc", 1, "unterminated string"),
         ("“abc\n”", 1, "unterminated string"),
+        ("“abc\r”", 1, "unterminated string"),
+        ("“abc\r\n”", 1, "unterminated string"),
         ("“a\\q”", 1, "unknown escape sequence '\\q'"),
         ("“a\\", 1, "unterminated string"),
         ("a & b", 1, "unexpected character '&', did you mean '&&'?"),

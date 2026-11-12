@@ -49,7 +49,7 @@ Prints `small slop` twice, then `big slop`.
 | `vibe`        | `if`         | Conditional                                             |
 | `nah`         | `else`       | Else branch                                             |
 | `ralph`       | `while`      | Loop while a condition is `✅`                          |
-| `hallucinate` | `print`      | Print one value, then a newline                         |
+| `hallucinate` | `print`      | Print space-separated values, then a newline            |
 | `ship`        | `return`     | Return one value from a function                        |
 | `✨`          | `;`          | Statement terminator (required)                         |
 | `—`           | `//`         | Start a line comment                                    |
@@ -130,7 +130,7 @@ ralph score > 0 {
 
 ## Functions
 
-`clanker` declares a named function at the top level. Calls require exactly the declared number of arguments. Parameters and locals belong to the call's scope.
+`clanker` declares a named function at the top level. Calls to user-defined functions require exactly the declared number of arguments. Parameters and locals belong to the call's scope.
 
 ```slop
 clanker add(left, right) {
@@ -147,10 +147,14 @@ Call depth is capped at 500 nested calls. Exceeding it is a runtime error (`stac
 
 ## Built-Ins
 
-`hallucinate(value)` is the only built-in. It accepts exactly one argument, prints it followed by a newline, and returns `nil`. Numbers print as base-10 digits, strings without quotes, booleans as `✅`/`❌`, nil as `nil`, and functions as `<clanker name>`.
+`hallucinate(...)` is the only built-in. It accepts any number of arguments, including zero. It prints their string representations separated by single spaces, followed by a newline, and returns `nil`. With no arguments, it prints a blank line. Arguments are evaluated left to right before printing.
+
+Numbers print as base-10 digits, strings without quotes, booleans as `✅`/`❌`, nil as `nil`, and functions as `<clanker name>`.
 
 ```slop
-hallucinate(3)✨   — 3
+hallucinate(3)✨                 — 3
+hallucinate(“score”, 42, ✅)✨   — score 42 ✅
+hallucinate()✨                  — blank line
 ```
 
 ## Operators

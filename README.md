@@ -51,7 +51,7 @@ Prints `small slop` twice, then `big slop`.
 | `vibe`        | `if`         | Conditional                                             |
 | `nah`         | `else`       | Else branch                                             |
 | `ralph`       | `while`      | Loop while a condition is `✅`                          |
-| `hallucinate` | `print`      | Print one value, then a newline                         |
+| `hallucinate` | `print`      | Print space-separated values, then a newline            |
 | `ship`        | `return`     | Return one value from a function                        |
 | `✨`          | `;`          | Statement terminator (required)                         |
 | `—`           | `//`         | Start a line comment                                    |

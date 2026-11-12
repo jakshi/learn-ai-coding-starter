@@ -67,13 +67,15 @@ class Scanner:
     def scan_token(self) -> None:
         ch = self.advance()
 
-        if ch in " \t\r":
+        if ch in " \t":
             return
-        if ch == "\n":
+        if ch in "\r\n":
+            if ch == "\r":
+                self.match("\n")
             self.line += 1
             return
         if ch == "—":
-            while not self.at_end() and self.peek() != "\n":
+            while not self.at_end() and self.peek() not in "\r\n":
                 self.advance()
             return
         if ch == "/" and self.match("/"):
@@ -116,7 +118,7 @@ class Scanner:
     def string(self) -> None:
         chars: list[str] = []
         while True:
-            if self.at_end() or self.peek() == "\n":
+            if self.at_end() or self.peek() in "\r\n":
                 raise LexicalError(self.line, "unterminated string")
             ch = self.advance()
             if ch == "”":
