@@ -1,149 +1,30 @@
 # Sloperator
 
-A SlopLang interpreter.
+A tree-walking SlopLang interpreter written in Python. Requires Python 3.13+ and uv.
 
-## Language Reference
+## Run and validate
 
-Files use the `.slop` extension and run with:
-
-```bash
-uv run sloperator.py path/to/program.slop
-```
-
-Check a file's syntax without executing it:
+Run these commands from the project root:
 
 ```bash
-uv run sloperator.py --check path/to/program.slop
+uv run sloperator.py examples/hello.slop          # run a program
+uv run sloperator.py --check examples/hello.slop  # check syntax without executing
+uv run pytest                                   # run tests
+uv run ruff format --check                       # check formatting
+uv run ruff check                               # lint
+uv run ty check                                 # type-check
 ```
 
-`--check` can appear before or after the file path. A successful check produces no output and exits with status `0`. Lexical or syntax errors go to stderr and exit with status `1`; invalid arguments or unreadable files exit with status `2`. Check mode does not evaluate expressions or detect runtime errors.
+## Language reference
 
-### Example
-
-```slop
-— Comments start with an em dash. Statements end with sparkles.
-clanker describe(count) {
-    vibe count > 1 {
-        ship “big slop”✨
-    } nah {
-        ship “small slop”✨
-    }
-}
-
-loadbearing MAX = 3✨
-slop count = 0✨
-
-ralph count < MAX {
-    hallucinate(describe(count))✨
-    count = count + 1✨
-}
-```
-
-Prints `small slop` twice, then `big slop`.
-
-### The Slop Words
-
-| SlopLang      | Conventional | Meaning                                                 |
-| ------------- | ------------ | ------------------------------------------------------- |
-| `slop`        | `let`        | Declare a mutable variable                              |
-| `loadbearing` | `const`      | Declare an immutable variable                           |
-| `clanker`     | `fn`         | Define a function                                       |
-| `vibe`        | `if`         | Conditional                                             |
-| `nah`         | `else`       | Else branch                                             |
-| `ralph`       | `while`      | Loop while a condition is `✅`                          |
-| `hallucinate` | `print`      | Print space-separated values, then a newline            |
-| `ship`        | `return`     | Return one value from a function                        |
-| `✨`          | `;`          | Statement terminator (required)                         |
-| `—`           | `//`         | Start a line comment                                    |
-| `“ ”`         | `" "`        | String delimiters (straight quotes are a lexical error) |
-| `✅`          | `true`       | Boolean true literal                                    |
-| `❌`          | `false`      | Boolean false literal                                   |
-
-There are no other reserved words, and no `break`, `continue`, `for`, or `else if`.
-
-### Source Text
-
-UTF-8, case-sensitive. Identifiers match `[A-Za-z_][A-Za-z0-9_]*`. Spaces, tabs, and newlines are whitespace; newlines do not end statements.
-
-Emoji tokens are `✨` (U+2728), `✅` (U+2705), and `❌` (U+274C), each optionally followed by the variation selector U+FE0F, which some keyboards emit. `✨` must follow variable declarations, assignments, `ship`, and expression statements. It never follows a block's closing brace. `—` (U+2014) starts a comment that runs to end of line.
-
-Strings open with `“` (U+201C), close with `”` (U+201D), and support escapes `\n`, `\t`, `\”`, and `\\`. A string cannot contain a raw newline. Unknown escapes and unterminated strings are lexical errors.
-
-### Values
-
-| Type     | Examples                            | Notes                        |
-| -------- | ----------------------------------- | ---------------------------- |
-| Number   | `0`, `42`, `9001`                   | Arbitrary-precision integers |
-| String   | `“hello”`                           | Immutable Unicode text       |
-| Boolean  | `✅`, `❌`                          | Required by conditions       |
-| Nil      | Result of a function with no `ship` | No source literal            |
-| Function | `hallucinate`, `describe`           | Built-in or user-defined     |
-
-No implicit conversions.
-
-### Variables
-
-`slop` declares a mutable variable; `loadbearing` declares an immutable variable. Both require an initializer and a terminating `✨`, accept any value type, and work at the top level, inside blocks, and inside function bodies. A scope cannot declare a name twice, but an inner declaration may shadow an outer name.
-
-```slop
-loadbearing LIMIT = 100✨
-slop score = 10✨
-score = score + 1✨
-LIMIT = 200✨   — Runtime error: cannot assign to loadbearing 'LIMIT'
-```
-
-Assignment is a statement, not an expression: `name = expression✨`. It evaluates the right-hand side first, then targets the nearest existing binding. Reassigning a `loadbearing` binding, even to the same value, is a runtime error: `cannot assign to loadbearing '<name>'`. Reading or assigning an undefined name is a runtime error.
-
-Every brace block is a lexical scope. Assignment searches the current scope, then each enclosing scope.
-
-See the [specification](docs/spec.md#variables) for shadowing examples and the existing standalone-block scoping limitation.
-
-### Control Flow
-
-Conditions take no parentheses and must be booleans; there is no truthiness.
-
-```slop
-vibe score >= 10 {
-    hallucinate(“ship it”)✨
-} nah {
-    hallucinate(“keep working”)✨
-}
-
-ralph score > 0 {
-    score = score - 1✨
-}
-```
-
-`nah` must be followed by a block; nest a `vibe` for another condition. `ralph` checks its condition before each iteration.
-
-A tree-walking interpreter for [SlopLang](docs/spec.md), written in Python.
-
-```bash
-uv run sloperator.py examples/fib.slop
-```
+See [docs/spec.md](docs/spec.md) for syntax, types, scoping, operators, and errors.
+Browse [examples/](examples/) for runnable programs.
 
 ## Layout
 
-| Path                    | What it is                                             |
-| ----------------------- | ------------------------------------------------------ |
-| `sloperator.py`         | Command-line entrypoint                                |
-| `sloperator/lexer/`     | Source text to tokens                                  |
-| `sloperator/parser/`    | Tokens to AST (`ast.py` holds the node definitions)    |
-| `sloperator/evaluator/` | Walks the AST: values, environments, the interpreter   |
-| `sloperator/runner.py`  | Runs source through all three stages                   |
-| `docs/spec.md`          | The language specification                             |
-| `examples/`             | Example programs                                       |
-| `tests/`                | Pytest suite                                           |
-| `playground/`           | A tiny web server and editor page for running programs |
-
-## Validation
-
-```bash
-uv run pytest              # tests
-uv run ruff format --check # formatting
-uv run ruff check          # linting
-uv run ty check            # type checking
-```
+- `sloperator.py`: command-line entrypoint.
+- `sloperator/`: lexer, parser, evaluator, and shared runner.
+- `tests/`: regression and example tests.
 
 ## Playground
 
@@ -151,4 +32,4 @@ uv run ty check            # type checking
 uv run playground/server.py
 ```
 
-Then open <http://localhost:8080>.
+Open <http://localhost:8080>.
