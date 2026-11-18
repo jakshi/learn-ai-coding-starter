@@ -1,26 +1,28 @@
 # Sloperator agent notes
 
-## Verification
+## Project layout
 
-- Standard run and validation commands are in `README.md`. Focus one regression with `uv run pytest tests/test_evaluator.py -k division -q`.
-- For Python changes, also run `uv run ty check`: the repo-local `validate` skill runs pytest and Ruff but omits type checking.
-- `bootdev run <UUID>` checks a lesson; adding `-s` submits it. Submit only when requested.
+- `sloperator.py`: CLI entrypoint; `sloperator/runner.py` connects the lexer, parser, and evaluator.
+- `tests/`: regression tests; `examples/`: runnable `.slop` programs.
+- `playground/`: web UI and server; `.opencode/`: OpenCode plugin and configuration.
 
-## Interpreter contracts
+## Validation
 
-- Consult `docs/spec.md` before changing language behavior or writing `.slop` fixtures. Smart quotes `“...”`, em-dash comments `—`, and statement terminators `✨` are actual syntax.
-- The CLI, playground, and OpenCode tool share `sloperator.py` → `sloperator/runner.py` → lexer/parser/evaluator. `--check` stops after parsing; syntactically valid runtime failures must still pass it.
-- Raise the appropriate `SlopError` subclass from `sloperator/errors.py`; the runner catches only that family. Language regressions can use `sloperator.runner.run_source`, asserting exact stderr/line numbers, `exit_code`, and preservation of earlier stdout.
-- Use the evaluator's `is_number` for numeric operands: Python booleans are integers, but SlopLang booleans are not numbers. Division must truncate toward zero without converting arbitrary-precision integers to floats.
-- `tests/test_examples.py` discovers every `examples/*.slop` and requires successful, nonempty output. Keep invalid programs in test fixtures. The example suite does not assert exact stdout; add a focused assertion when output matters.
+Run all four commands from the project root after Python changes:
 
-## Integration gotchas
+```bash
+uv run pytest
+uv run ruff format --check
+uv run ruff check
+uv run ty check
+```
 
-- `.opencode/` has its own Bun dependencies. In `.opencode/plugins/run-slop.ts`, preserve project-root cwd, `uv run --no-active` (avoids inherited virtualenv paths), and `codemode: false`. Its JSON uses `exitCode`; the Python runner and playground use `exit_code`.
-- Playground logs are written to root `logs/runs.log`, not `playground/logs/`.
-- `uv.lock` is Git-tracked but excluded from ordinary search by `.ignore`; inspect it by its explicit path when investigating dependencies.
-- Honor `opencode.jsonc` permissions. Do not route around denied `.env` reads or `explore` delegation through other tools or agents.
+## Regression tests
 
-## Documentation
+- Add focused tests for bug fixes and changes to parsing, evaluation, or diagnostics, covering the failing case and relevant edge cases.
+- Use `sloperator.runner.run_source` for end-to-end language tests; assert exact stdout, stderr (including line numbers), and `exit_code` where relevant.
+- Keep invalid programs in test fixtures. Every `examples/*.slop` must run successfully with nonempty output; add a focused test when exact output matters.
 
-- Keep `README.md` under 50 lines, with interpreter and validation commands in the first 20. Put language details in `docs/spec.md` rather than expanding the README.
+## Language behavior
+
+Consult [docs/spec.md](docs/spec.md) before changing language behavior or writing `.slop` fixtures. It defines syntax, precedence, types, scoping, and errors.
