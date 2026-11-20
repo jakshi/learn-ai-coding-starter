@@ -19,6 +19,7 @@ uv run ty check
 
 ## Regression tests
 
+- For comparison and equality precedence changes, run `uv run pytest tests/test_comparisons.py -q` from the project root.
 - Add focused tests for bug fixes and changes to parsing, evaluation, or diagnostics, covering the failing case and relevant edge cases.
 - Use `sloperator.runner.run_source` for end-to-end language tests; assert exact stdout, stderr (including line numbers), and `exit_code` where relevant.
 - Keep invalid programs in test fixtures. Every `examples/*.slop` must run successfully with nonempty output; add a focused test when exact output matters.
